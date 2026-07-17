@@ -1,0 +1,106 @@
+:root {
+  --lavender: #F0B9ED;
+  --lime: #E9FC94;
+  --orange: #FDBA74;
+  --pink: #FDA4AF;
+  --bg: #F8FAFC;
+  --ink: #1F2937;
+  --card-bg: #F0B9ED;
+  --header-bg: #FFFFFF;
+  --card-inner-bg: #FFFFFF;
+  --input-bg: #FFFFFF;
+  --input-text: #1F2937;
+  --border-color: #000000;
+  --grid-color: rgba(0, 0, 0, 0.05);
+  --grid-size: 24px;
+}
+
+.dark-theme {
+  --lavender: #2A1438;
+  --lime: #CCFF00;
+  --orange: #C2410C;
+  --pink: #BE123C;
+  --bg: #0B0B0C;
+  --ink: #F3F4F6;
+  --card-bg: #1E0F2B;
+  --header-bg: #151518;
+  --card-inner-bg: #1C1C22;
+  --input-bg: #26262B;
+  --input-text: #FFFFFF;
+  --border-color: #000000;
+  --grid-color: rgba(204, 255, 0, 0.03);
+  --grid-size: 24px;
+}
+
+.brut-shadow {
+  box-shadow: none !important;
+}
+
+.card-shadow-wrapper {
+  position: relative;
+  border-radius: 1.5rem;
+  background: var(--border-color);
+  border: 3px solid var(--border-color);
+}
+
+.card-scene-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform: translate(-8px, -8px);
+  border-radius: 1.5rem;
+  background: transparent;
+}
+
+@keyframes pulse-skel {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .4; }
+}
+
+.skel {
+  animation: pulse-skel 1.1s ease-in-out infinite;
+  background: var(--lime);
+}
+
+input {
+  outline: none;
+  background: var(--input-bg) !important;
+  color: var(--input-text) !important;
+}
+
+select {
+  outline: none;
+  background: var(--input-bg) !important;
+  color: var(--input-text) !important;
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  background-image: url("data:image/svg+xml;utf8,<svg fill='black' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 12px center !important;
+  padding-right: 36px !important;
+}
+
+.dark-theme select {
+  background-image: url("data:image/svg+xml;utf8,<svg fill='white' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>") !important;
+}
+
+select:focus, input:focus, button:focus-visible {
+  outline: 3px solid var(--border-color);
+  outline-offset: 2px;
+}
+
+.mastered-card {
+  opacity: 0.55;
+  filter: grayscale(40%);
+  border-style: dashed;
+}
+
+.toast {
+  animation: slidein .25s ease-out;
+}
+
+@keyframes slidein {
+  from { transform: translateY(12px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
