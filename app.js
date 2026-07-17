@@ -17,7 +17,7 @@
   const langSelect = $('#langSelect'), levelSelect = $('#levelSelect'), topicSelect = $('#topicSelect'), themeToggleBtn = $('#themeToggleBtn'), settingsModal = $('#settingsModal');
   const batchNav = $('#batchNav'), prevWordBtn = $('#prevWordBtn'), nextWordBtn = $('#nextWordBtn'), batchProgress = $('#batchProgress');
   const authModal = $('#authModal'), authBtn = $('#authBtn'), closeAuthBtn = $('#closeAuthBtn'), signInBtn = $('#signInBtn'), signUpBtn = $('#signUpBtn'), authEmail = $('#authEmail'), authPassword = $('#authPassword'), userDisplayBadge = $('#userDisplayBadge');
-
+const toastContainer = document.getElementById('toast-container') || document.body;
   const langFlags = {'английском':'🇬🇧','испанском':'🇪🇸','немецком':'🇩🇪','французском':'🇫🇷','итальянском':'🇮🇹'};
   const levelColors = {'A1':'#86EFAC','A2':'#86EFAC','B1':'#FDE047','B2':'#FDE047','C1':'#FCA5A5','C2':'#FCA5A5'};
   function getFlag(lang) { return langFlags[lang.toLowerCase()] || '✏️'; }
