@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>WordFlip — Генератор карточек слов</title>
-  
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -14,169 +13,167 @@
 </head>
 <body>
 
-  <!-- ===================== CREDENTIALS MODAL ===================== -->
-  <div id="credentialsModal" class="modal-overlay" style="display:none;">
+  <!-- CREDENTIALS MODAL -->
+  <div id="credentialsModal" class="modal-overlay hidden">
     <div class="modal-content">
       <h2 class="panel-header">Настройка ИИ</h2>
-      <p style="font-size:0.8125rem;color:var(--text-secondary);margin-bottom:16px;">Введите ваш Gemini API Key для генерации карточек. Ключ сохраняется строго в вашем браузере.</p>
-      
-      <div style="display:flex;flex-direction:column;gap:12px;">
+      <p class="text-sm text-gray-500 mb-4">Введите ваш Gemini API Key для генерации карточек. Ключ сохраняется строго в вашем браузере.</p>
+      <div class="space-y-3">
         <div>
-          <label style="display:block;font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-muted);margin-bottom:6px;">Gemini API Key</label>
-          <input id="apiKeyInput" type="password" placeholder="AIzaSy..." style="width:100%;">
+          <label class="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-1">Gemini API Key</label>
+          <input id="apiKeyInput" type="password" placeholder="AIzaSy..." class="w-full">
         </div>
-        <button id="saveCredentialsBtn" class="btn btn-primary" style="width:100%;">Сохранить и начать</button>
+        <button id="saveCredentialsBtn" class="btn btn-primary w-full">Сохранить и начать</button>
       </div>
   </div>
 
-  <div id="toast-container" style="position:fixed;bottom:20px;right:20px;z-index:50;display:flex;flex-direction:column;gap:8px;max-width:360px;width:100%;pointer-events:none;"></div>
+  <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-xs w-full pointer-events-none"></div>
 
-  <!-- ===================== HEADER ===================== -->
+  <!-- HEADER -->
   <header>
     <div class="inner">
       <a class="header-logo" href="#">
         <div class="header-logo-icon">W</div>
         <span class="header-logo-text">WordFlip</span>
       </a>
-      
-      <div style="display:flex;align-items:center;gap:4px;">
+      <div class="flex items-center gap-1">
         <button data-tab="generator" class="tab-btn active">Генератор</button>
         <button data-tab="vocab" class="tab-btn">Мой словарь</button>
         <button data-tab="audit" class="tab-btn">Лог активности</button>
       </div>
-      
-      <div style="display:flex;align-items:center;gap:8px;">
+      <div class="flex items-center gap-2">
         <div id="streakBadge" class="badge badge-orange">🔥 <span id="streakCount">0</span> дн.</div>
         <div id="userEmailDisplay" class="user-email-display hidden">
           <div class="user-email-avatar">👤</div>
           <span class="user-email-text"></span>
         </div>
-<button id="authBtn" class="btn btn-sm">👤 Войти</button>
+        <button id="authBtn" class="btn btn-sm">👤 Войти</button>
         <button id="themeToggleBtn" class="btn btn-sm btn-icon">🌙</button>
         <button id="settingsBtn" class="btn btn-sm btn-icon">⚙️</button>
       </div>
   </header>
 
-  <!-- ===================== AUTH MODAL ===================== -->
-  <div id="authModal" class="modal-overlay" style="display:none;">
+  <!-- AUTH MODAL -->
+  <div id="authModal" class="modal-overlay hidden">
     <div class="modal-content">
-      <h2 class="panel-header" style="font-size:1.15rem;">Облачный профиль</h2>
-      <div style="display:flex;flex-direction:column;gap:12px;">
+      <h2 class="panel-header text-lg">Облачный профиль</h2>
+      <div class="space-y-3">
         <input id="authEmail" type="email" placeholder="Email">
         <input id="authPassword" type="password" placeholder="Пароль">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-          <button id="signInBtn" class="btn" style="width:100%;">Войти</button>
-          <button id="signUpBtn" class="btn btn-primary" style="width:100%;">Регистрация</button>
+        <div class="grid grid-cols-2 gap-2">
+          <button id="signInBtn" class="btn w-full">Войти</button>
+          <button id="signUpBtn" class="btn btn-primary w-full">Регистрация</button>
         </div>
-        <button id="closeAuthBtn" style="background:none;border:none;cursor:pointer;font-size:0.75rem;font-weight:600;color:var(--text-muted);text-decoration:underline;text-align:center;margin-top:4px;">Закрыть</button>
+        <button id="closeAuthBtn" class="w-full text-center text-xs font-semibold text-gray-400 underline mt-1 bg-transparent border-none cursor-pointer">Закрыть</button>
       </div>
   </div>
 
-  <main style="max-width:1280px;margin:0 auto;padding:32px 24px;">
-    <!-- ===================== GENERATOR TAB ===================== -->
+  <!-- MAIN CONTENT -->
+  <main class="max-w-7xl mx-auto px-6 py-8">
+
+    <!-- GENERATOR TAB -->
     <section id="tab-generator" class="tab-panel">
-      <div style="display:grid;grid-template-columns:1fr;gap:24px;align-items:start;">
-        
-        <div style="display:grid;grid-template-columns:1fr 2fr 1fr;gap:24px;">
-          
-          <!-- Parameters -->
-          <div class="panel">
-            <h3 class="panel-header">Параметры</h3>
-            <div style="display:flex;flex-direction:column;gap:16px;">
-              <div>
-                <label class="stat-label" style="display:block;margin-bottom:6px;">Язык</label>
-                <select id="langSelect">
-                  <option value="английском">🇬🇧 English</option>
-                  <option value="испанском">🇪🇸 Español</option>
-                  <option value="немецком">🇩🇪 Deutsch</option>
-                  <option value="французском">🇫🇷 Français</option>
-                  <option value="итальянском">🇮🇹 Italiano</option>
-                </select>
-              </div>
-              <div>
-                <label class="stat-label" style="display:block;margin-bottom:6px;">Уровень</label>
-                <select id="levelSelect">
-                  <option>A1</option><option>A2</option><option selected>B1</option>
-                  <option>B2</option><option>C1</option><option>C2</option>
-                </select>
-              </div>
-              <div>
-                <label class="stat-label" style="display:block;margin-bottom:6px;">Тематика</label>
-                <select id="topicSelect">
-                  <option value="Разговорный">Разговорный</option>
-                  <option value="IT и Технологии">IT и Технологии</option>
-                  <option value="Академический (IELTS/TOEFL)">Академический (IELTS/TOEFL)</option>
-                  <option value="Медиа и Поп-культура">Медиа и Поп-культура</option>
-                  <option value="Бизнес и Карьера">Бизнес и Карьера</option>
-                  <option value="Сленг">Сленг</option>
-                </select>
-              </div>
-              <button id="generateBtn" class="btn btn-primary" style="width:100%;margin-top:8px;">Сгенерировать подборку</button>
-            </div>
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
 
-          <!-- Card area -->
-          <div style="display:flex;flex-direction:column;gap:16px;">
-            <div id="cardWrapper" class="card-scene" style="display:none;height:500px;">
-              <div class="card-shadow-wrapper" style="height:100%;">
-                <div class="card-scene-inner" style="height:100%;">
-                  <div id="cardFlip" class="card-flip" style="height:100%;">
-                    <div class="card-face" style="background:var(--card-bg);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:2rem 1.5rem;" id="cardFront">
-                      <div style="display:flex;gap:8px;margin-bottom:24px;">
-                        <span id="cardLevelBadge" class="badge" style="background:var(--surface);color:var(--ink);">B1</span>
-                        <span id="cardCategoryBadge" class="badge badge-accent">Разговорный</span>
-                      </div>
-                      <h3 id="cardWord" style="font-size:2.5rem;font-weight:800;letter-spacing:-0.03em;margin-bottom:8px;color:var(--ink);word-break:break-word;">word</h3>
-                      <p id="cardTranscription" style="font-size:1.125rem;font-family:monospace;font-weight:500;color:var(--text-secondary);">/wɜːrd/</p>
-                      <p style="position:absolute;bottom:24px;font-size:0.8125rem;font-weight:500;color:var(--text-muted);">нажмите, чтобы перевернуть</p>
-                      <button id="speakBtn" style="position:absolute;top:20px;left:20px;width:40px;height:40px;display:flex;align-items:center;justify-content:center;border-radius:50%;border:1.5px solid var(--border);background:var(--surface);cursor:pointer;font-size:1.1rem;color:var(--ink);">🔊</button>
-                      <button id="favBtnFront" style="position:absolute;top:20px;right:20px;background:none;border:none;cursor:pointer;font-size:1.5rem;">🤍</button>
+        <!-- Parameters -->
+        <div class="lg:col-span-3 panel">
+          <h3 class="panel-header">Параметры</h3>
+          <div class="space-y-4">
+            <div>
+              <label class="stat-label block mb-1.5">Язык</label>
+              <select id="langSelect">
+                <option value="английском">🇬🇧 English</option>
+                <option value="испанском">🇪🇸 Español</option>
+                <option value="немецком">🇩🇪 Deutsch</option>
+                <option value="французском">🇫🇷 Français</option>
+                <option value="итальянском">🇮🇹 Italiano</option>
+              </select>
+            </div>
+            <div>
+              <label class="stat-label block mb-1.5">Уровень</label>
+              <select id="levelSelect">
+                <option>A1</option><option>A2</option><option selected>B1</option>
+                <option>B2</option><option>C1</option><option>C2</option>
+              </select>
+            </div>
+            <div>
+              <label class="stat-label block mb-1.5">Тематика</label>
+              <select id="topicSelect">
+                <option value="Разговорный">Разговорный</option>
+                <option value="IT и Технологии">IT и Технологии</option>
+                <option value="Академический (IELTS/TOEFL)">Академический (IELTS/TOEFL)</option>
+                <option value="Медиа и Поп-культура">Медиа и Поп-культура</option>
+                <option value="Бизнес и Карьера">Бизнес и Карьера</option>
+                <option value="Сленг">Сленг</option>
+              </select>
+            </div>
+            <button id="generateBtn" class="btn btn-primary w-full mt-2">Сгенерировать подборку</button>
+          </div>
+
+        <!-- Card Area -->
+        <div class="lg:col-span-6 space-y-4">
+          <div id="cardWrapper" class="card-scene hidden h-[500px]">
+            <div class="card-shadow-wrapper h-full">
+              <div class="card-scene-inner h-full">
+                <div id="cardFlip" class="card-flip h-full">
+                  <div class="card-face" id="cardFront" style="background:var(--card-bg);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:2rem 1.5rem;">
+                    <div class="flex gap-2 mb-6">
+                      <span id="cardLevelBadge" class="badge" style="background:var(--surface);color:var(--ink);">B1</span>
+                      <span id="cardCategoryBadge" class="badge badge-accent">Разговорный</span>
                     </div>
-                    <div class="card-face card-back" style="background:var(--card-bg);padding:2rem;overflow-y:auto;" id="cardBack">
-                      <h4 style="font-size:1.75rem;font-weight:700;margin-bottom:20px;color:var(--ink);display:flex;align-items:center;gap:8px;">🔤 <span id="cardTranslation">translation</span></h4>
-                      <div id="cardExamples" style="display:flex;flex-direction:column;gap:12px;"></div>
+                    <h3 id="cardWord" style="font-size:2.5rem;font-weight:800;letter-spacing:-0.03em;margin-bottom:8px;color:var(--ink);word-break:break-word;">word</h3>
+                    <p id="cardTranscription" style="font-size:1.125rem;font-family:monospace;font-weight:500;color:var(--text-secondary);">/wɜːrd/</p>
+                    <p style="position:absolute;bottom:24px;font-size:0.8125rem;font-weight:500;color:var(--text-muted);">нажмите, чтобы перевернуть</p>
+                    <button id="speakBtn" style="position:absolute;top:20px;left:20px;width:40px;height:40px;display:flex;align-items:center;justify-content:center;border-radius:50%;border:1.5px solid var(--border);background:var(--surface);cursor:pointer;font-size:1.1rem;color:var(--ink);">🔊</button>
+                    <button id="favBtnFront" style="position:absolute;top:20px;right:20px;background:none;border:none;cursor:pointer;font-size:1.5rem;">🤍</button>
                   </div>
-              </div>
-
-            <div id="batchNav" class="batch-nav" style="display:none;">
-              <button id="prevWordBtn" class="btn btn-sm">Назад</button>
-              <span id="batchProgress" style="font-weight:600;font-size:0.875rem;color:var(--text-secondary);">1 из 5</span>
-              <button id="nextWordBtn" class="btn btn-sm">Вперед</button>
+                  <div class="card-face card-back" id="cardBack" style="background:var(--card-bg);padding:2rem;overflow-y:auto;">
+                    <h4 style="font-size:1.75rem;font-weight:700;margin-bottom:20px;color:var(--ink);display:flex;align-items:center;gap:8px;">🔤 <span id="cardTranslation">translation</span></h4>
+                    <div id="cardExamples" class="space-y-3"></div>
+                </div>
             </div>
 
-            <div id="loaderSkeleton" class="loader-container" style="display:none;height:500px;">
-              <div style="width:120px;height:120px;border-radius:16px;" class="skel"></div>
-              <div style="width:60%;height:24px;border-radius:8px;" class="skel"></div>
-              <p style="font-weight:600;font-size:0.9375rem;color:var(--text-secondary);">ИИ генерирует подборку слов...</p>
-            </div>
+          <div id="batchNav" class="batch-nav hidden">
+            <button id="prevWordBtn" class="btn btn-sm">Назад</button>
+            <span id="batchProgress" style="font-weight:600;font-size:0.875rem;color:var(--text-secondary);">1 из 5</span>
+            <button id="nextWordBtn" class="btn btn-sm">Вперед</button>
+          </div>
 
-            <div id="emptyState" class="empty-state" style="height:500px;">
-              <div class="empty-state-icon">🃏</div>
-              <p class="empty-state-title">Пока пусто</p>
-              <p class="empty-state-desc">Сгенерируйте подборку слов для начала</p>
-            </div>
+          <div id="loaderSkeleton" class="loader-container hidden h-[500px]">
+            <div class="w-32 h-32 rounded-2xl skel"></div>
+            <div class="w-3/5 h-6 rounded skel"></div>
+            <p style="font-weight:600;font-size:0.9375rem;color:var(--text-secondary);">ИИ генерирует подборку слов...</p>
+          </div>
 
-          <!-- History -->
-          <div class="panel">
-            <h3 class="panel-header">История сессии</h3>
-            <div id="historyList" style="display:flex;flex-direction:column;gap:4px;max-height:400px;overflow-y:auto;padding-right:4px;"></div>
-        </div>
+          <div id="emptyState" class="empty-state h-[500px]">
+            <div class="empty-state-icon">🃏</div>
+            <p class="empty-state-title">Пока пусто</p>
+            <p class="empty-state-desc">Сгенерируйте подборку слов для начала</p>
+          </div>
+
+        <!-- History -->
+        <div class="lg:col-span-3 panel">
+          <h3 class="panel-header">История сессии</h3>
+          <div id="historyList" class="space-y-1 max-h-[400px] overflow-y-auto pr-1"></div>
+
+      </div>
     </section>
 
-    <!-- ===================== VOCAB TAB ===================== -->
-    <section id="tab-vocab" class="tab-panel" style="display:none;">
-      <div class="stat-grid" style="margin-bottom:32px;">
+    <!-- VOCAB TAB -->
+    <section id="tab-vocab" class="tab-panel hidden">
+      <div class="stat-grid mb-8">
         <div class="stat-item"><p class="stat-label">Всего слов</p><p id="dashTotalWords" class="stat-value">0</p></div>
-        <div class="stat-item"><p class="stat-label">Цель дня</p><p id="dashDailyGoal" class="stat-value" style="font-size:1.25rem;">0 / 5</p></div>
+        <div class="stat-item"><p class="stat-label">Цель дня</p><p id="dashDailyGoal" class="stat-value text-lg">0 / 5</p></div>
         <div class="stat-item"><p class="stat-label">Изучено</p><p id="dashMasteredCount" class="stat-value" style="color:var(--success);">0</p></div>
         <div class="stat-item"><p class="stat-label">Точность квиза</p><p id="dashQuizAccuracy" class="stat-value" style="color:var(--warning);">0%</p></div>
 
-      <div style="display:grid;grid-template-columns:1fr 2fr;gap:24px;margin-bottom:32px;align-items:start;">
-        <div class="panel">
-          <h3 class="panel-header" style="font-size:1.1rem;">Добавить своё слово</h3>
-          <div style="display:flex;flex-direction:column;gap:12px;">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8 items-start">
+        <div class="lg:col-span-1 panel">
+          <h3 class="panel-header text-lg">Добавить своё слово</h3>
+          <div class="space-y-3">
             <input id="customWord" type="text" placeholder="Слово / Выражение">
             <input id="customTranslation" type="text" placeholder="Перевод (необязательно)">
-            <div style="display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;">
+            <div class="grid grid-cols-[1fr_auto] gap-2 items-center">
               <select id="customLang">
                 <option value="английском">🇬🇧 English</option>
                 <option value="испанском">🇪🇸 Español</option>
@@ -184,36 +181,36 @@
                 <option value="французском">🇫🇷 Français</option>
                 <option value="итальянском">🇮🇹 Italiano</option>
               </select>
-              <span style="font-size:0.75rem;font-weight:600;color:var(--text-muted);">AI</span>
+              <span class="text-xs font-semibold text-gray-400">AI</span>
             </div>
-            <p style="font-size:0.75rem;color:var(--text-muted);margin:0;">Перевод, уровень и примеры — автоматически</p>
-            <button id="addCustomWordBtn" class="btn" style="width:100%;background:var(--accent-soft);border-color:var(--accent);color:var(--accent);">Сохранить с AI</button>
+            <p class="text-xs text-gray-400">Перевод, уровень и примеры — автоматически</p>
+            <button id="addCustomWordBtn" class="btn w-full" style="background:var(--accent-soft);border-color:var(--accent);color:var(--accent);">Сохранить с AI</button>
           </div>
 
-        <div class="panel">
-          <div style="display:flex;flex-direction:column;gap:16px;">
-            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;">
-              <div style="flex:1;min-width:200px;">
-                <h3 class="panel-header" style="font-size:1.1rem;margin-bottom:8px;">Управление карточками</h3>
-                <input id="vocabSearch" type="text" placeholder="Поиск по буквам...">
-              </div>
-              <div style="display:flex;gap:8px;align-self:flex-end;">
-                <button id="startQuizBtn" class="btn btn-sm btn-primary">Тренировка</button>
-                <button id="exportVocabBtn" class="btn btn-sm">Excel</button>
-              </div>
-            <div id="vocabFolders" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
-        </div>
+        <div class="lg:col-span-2 panel">
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+            <div class="w-full sm:w-1/2">
+              <h3 class="panel-header text-lg mb-2">Управление карточками</h3>
+              <input id="vocabSearch" type="text" placeholder="Поиск по буквам...">
+            </div>
+            <div class="flex gap-2 self-end">
+              <button id="startQuizBtn" class="btn btn-sm btn-primary">Тренировка</button>
+              <button id="exportVocabBtn" class="btn btn-sm">Excel</button>
+            </div>
+          <div id="vocabFolders" class="flex flex-wrap gap-2"></div>
+      </div>
 
       <div id="vocabGrid" class="vocab-grid"></div>
-      <div id="vocabEmpty" class="empty-state" style="display:none;margin-top:16px;"><p class="empty-state-title">Словарь пуст</p></div>
+      <div id="vocabEmpty" class="empty-state hidden mt-4"><p class="empty-state-title">Словарь пуст</p></div>
     </section>
 
-    <!-- ===================== AUDIT LOG TAB ===================== -->
-    <section id="tab-audit" class="tab-panel" style="display:none;">
+    <!-- AUDIT LOG TAB -->
+    <section id="tab-audit" class="tab-panel hidden">
       <div class="panel">
-        <h2 class="panel-header" style="font-size:1.35rem;border-bottom:1.5px solid var(--border-light);padding-bottom:12px;">Лог облачной активности</h2>
-        <div id="auditLogList" style="max-height:600px;overflow-y:auto;margin-top:16px;"></div>
+        <h2 class="panel-header text-xl" style="border-bottom:1.5px solid var(--border-light);padding-bottom:12px;">Лог облачной активности</h2>
+        <div id="auditLogList" class="max-h-[600px] overflow-y-auto mt-4 space-y-2"></div>
     </section>
+
   </main>
 
   <script src="app.js"></script>
