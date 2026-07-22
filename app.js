@@ -206,7 +206,7 @@
     }
   }
 
-  function displayWord() {
+function displayWord() {
     if (batchWords.length === 0) return;
     const word = batchWords[batchCurrentIndex];
 
@@ -221,7 +221,7 @@
     if (cardFlip) cardFlip.classList.remove('flipped');
     if (cardWord) cardWord.textContent = word.word;
     if (cardTranslation) cardTranslation.textContent = word.translation;
-    if (cardTranscription) cardTranscription.textContent = word.transcription || '';
+    if (cardTranscription) cardTranscription.textContent = word.transcription ? `[ ${word.transcription} ]` : '';
     if (batchProgress) batchProgress.textContent = `Карточка ${batchCurrentIndex + 1} из ${batchWords.length}`;
 
     if ($('#cardLevelBadge')) {
@@ -232,7 +232,7 @@
 
     if ($('#cardExamples')) {
       $('#cardExamples').innerHTML = (word.examples || []).map(ex => `
-        <div class="brut-border rounded-lg p-3 text-left mb-2" style="background:var(--card-inner-bg, #fff); color:var(--ink, #000);">
+        <div class="brut-border rounded-xl p-3 text-left mb-2 bg-white" style="background:var(--card-inner-bg, #fff); color:var(--ink, #000);">
           <p class="font-semibold text-sm">${escapeHtml(ex.en || ex.word || '')}</p>
           <p class="text-xs opacity-70 mt-1">${escapeHtml(ex.ru || ex.translation || '')}</p>
         </div>
@@ -248,6 +248,13 @@
     if (cardWrapper) cardWrapper.classList.remove('hidden');
     if (batchNav) batchNav.classList.remove('hidden');
     updateFavIcon(word);
+  }
+
+  function updateFavIcon(word) {
+    const favBtn = $('#favBtnFront');
+    if (!favBtn || !word) return;
+    const isSaved = dbVocabulary.some(v => v.word.toLowerCase() === word.word.toLowerCase());
+    favBtn.textContent = isSaved ? '❤️' : '🤍';
   }
 
   // --- 4. ОТРЕСОВКА И ИНТЕРФЕЙС ---
@@ -453,21 +460,54 @@
     if ($('#nextWordBtn')) $('#nextWordBtn').addEventListener('click', () => { if (batchCurrentIndex < batchWords.length - 1) { batchCurrentIndex++; displayWord(); } });
 
     // Карточка и Избранное
+    const cardFront = $('#cardFront');
+    const cardBack = $('#cardBack');
     const cardFlip = $('#cardFlip');
-    if ($('#cardFront') && cardFlip) $('#cardFront').addEventListener('click', () => cardFlip.classList.add('flipped'));
-    if ($('#cardBack') && cardFlip) $('#cardBack').addEventListener('click', () => cardFlip.classList.remove('flipped'));
+    if (cardFront && cardFlip) {
+      cardFront.addEventListener('click', (e) => {
+        // Если кликнули по сердечку или динамику — НЕ переворачиваем карточку
+        if (e.target.closest('#favBtnFront') || e.target.closest('#speakBtn')) return;
+        cardFlip.classList.add('flipped');
+      });
+    }
 
-    if ($('#favBtnFront')) {
-      $('#favBtnFront').addEventListener('click', (e) => {
+    if (cardBack && cardFlip) {
+      cardBack.addEventListener('click', () => cardFlip.classList.remove('flipped'));
+    }
+
+ const favBtnFront = $('#favBtnFront');
+    if (favBtnFront) {
+      favBtnFront.addEventListener('click', (e) => {
+        e.stopPropagation(); // Блокируем всплытие, чтобы карточка не переворачивалась
+        const activeWord = batchWords[batchCurrentIndex];
+        if (!activeWord) return;
+
+        const isSaved = dbVocabulary.some(v => v.word.toLowerCase() === activeWord.word.toLowerCase());
+
+        if (isSaved) {
+          dbVocabulary = dbVocabulary.filter(v => v.word.toLowerCase() !== activeWord.word.toLowerCase());
+          cloudDeleteWord(activeWord.id);
+          showToast('Удалено из словаря', 'info');
+        } else {
+          dbVocabulary.unshift(activeWord);
+          cloudSaveWord(activeWord);
+          showToast('Сохранено в словарь! ❤️', 'success');
+        }
+        updateFavIcon(activeWord);
+        renderVocab();
+      });
+    }
+
+const speakBtn = $('#speakBtn');
+    if (speakBtn) {
+      speakBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         const activeWord = batchWords[batchCurrentIndex];
-        if (activeWord) {
-          if (dbVocabulary.some(v => v.word.toLowerCase() === activeWord.word.toLowerCase())) {
-            cloudDeleteWord(activeWord.id);
-          } else {
-            cloudSaveWord(activeWord);
-          }
-        }
+        if (!activeWord) return;
+        
+        const utterance = new SpeechSynthesisUtterance(activeWord.word);
+        utterance.lang = 'en-US';
+        window.speechSynthesis.speak(utterance);
       });
     }
 

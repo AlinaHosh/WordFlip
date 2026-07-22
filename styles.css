@@ -77,9 +77,10 @@ body {
 
 .card-shadow-wrapper {
   position: relative;
+  width: 100%;
+  height: 100%;
   border-radius: 1.5rem;
   background: var(--border-color);
-  border: 3px solid var(--border-color);
 }
 
 .card-scene-inner {
@@ -106,9 +107,12 @@ body {
 .card-face {
   position: absolute;
   inset: 0;
+  width: 100%;
+  height: 100%;
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
   border-radius: 1.5rem;
+  overflow: hidden;
 }
 
 .card-back {
@@ -171,4 +175,17 @@ select:focus, input:focus, button:focus-visible {
 @keyframes slidein {
   from { transform: translateY(12px); opacity: 0; }
   to { transform: translateY(0); opacity: 1; }
+}
+
+#cardFront {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2rem 1.5rem;
+}
+
+#favBtnFront, #speakBtn {
+  z-index: 20;
+  cursor: pointer;
 }
