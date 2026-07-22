@@ -171,8 +171,7 @@
       `[{"word": "word", "translation": "перевод", "transcription": "[transcription]", "category": "${selectedTopic}", "examples": [{"en":"sentence1","ru":"перевод1"}]}]`;
 
     try {
-      // 🚀 Актуальный эндпоинт модели Gemini 2.5 Flash
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(geminiKey)}`;
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${encodeURIComponent(geminiKey)}`;
       const resp = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
