@@ -26,7 +26,8 @@
     const toastContainer = document.getElementById('toast-container') || document.body;
     const colors = { info: '#F0B9ED', error: '#FCA5A5', success: '#E9FC94' };
     const el = document.createElement('div');
-    el.className = 'toast brut-border brut-shadow-sm rounded-xl px-4 py-3 font-bold text-sm text-black fixed bottom-4 right-4 z-50';
+    el.className = 'toast brut-border brut-shadow-sm rounded-xl px-4 py-3 font-bold text-sm fixed bottom-4 right-4 z-50';
+    el.style.color = 'var(--ink)';
     el.style.background = colors[type] || colors.info;
     el.textContent = msg;
     toastContainer.appendChild(el);
@@ -61,20 +62,22 @@
     try {
       supabaseClient = supabase.createClient(url, key);
       supabaseClient.auth.onAuthStateChange((event, session) => {
-        const userBadge = $('#userDisplayBadge');
+        const userEmailDisplay = $('#userEmailDisplay');
+        const userEmailText = userEmailDisplay?.querySelector('.user-email-text');
         const authBtn = $('#authBtn');
 
         if (session && session.user) {
           currentUser = session.user;
-          if (userBadge) {
-            userBadge.textContent = currentUser.email;
-            userBadge.classList.remove('hidden');
+          if (userEmailDisplay && userEmailText) {
+            userEmailText.textContent = currentUser.email;
+            userEmailDisplay.classList.remove('hidden');
+            userEmailDisplay.title = currentUser.email;
           }
           if (authBtn) authBtn.textContent = '🚪 Выйти';
           syncDataFromCloud();
         } else {
           currentUser = null;
-          if (userBadge) userBadge.classList.add('hidden');
+          if (userEmailDisplay) userEmailDisplay.classList.add('hidden');
           if (authBtn) authBtn.textContent = '👤 Войти';
           dbVocabulary = [];
           dbAuditLogs = [];
@@ -116,8 +119,10 @@
 
   async function cloudDeleteWord(id) {
     if (!supabaseClient || !currentUser) return;
+    const word = dbVocabulary.find(w => w.id === id);
     await supabaseClient.from('vocabulary').delete().eq('id', id);
     syncDataFromCloud();
+    showToast(`🗑️ "${word?.word || 'слово'}" удалено из словаря`, 'info');
   }
 
   async function cloudToggleMastered(id, currentStatus) {
@@ -168,7 +173,7 @@
 
     const prompt = `Сгенерируй строго массив из 5 случайных слов/выражений на языке ${selectedLang} для уровня ${selectedLevel} по теме "${selectedTopic}". ${exclusionPhrase} ` +
       `Верни ТОЛЬКО валидный JSON-массив без markdown разметки. Формат: ` +
-      `[{"word": "word", "translation": "перевод", "transcription": "[transcription]", "category": "${selectedTopic}", "examples": [{"en":"sentence1","ru":"перевод1"}]}]`;
+      `[{"word": "word", "translation": "перевод", "transcription": "[transcription]", "category": "${selectedTopic}", "examples": [{"en":"sentence1","ru":"перевод1"},{"en":"sentence2","ru":"перевод2"},{"en":"sentence3","ru":"перевод3"}]}]`;
 
     try {
       const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${encodeURIComponent(geminiKey)}`;
@@ -262,7 +267,7 @@ function displayWord() {
     const historyList = $('#historyList');
     if (!historyList) return;
     historyList.innerHTML = localHistory.map((word, index) => `
-      <div class="w-full flex items-center justify-between bg-white brut-border rounded-lg p-2 mb-2" style="background:var(--card-inner-bg);">
+      <div class="w-full flex items-center justify-between brut-border rounded-lg p-2 mb-2" style="background:var(--card-inner-bg); color:var(--ink);">
         <span class="font-bold text-sm">${getFlag(word.lang)} ${escapeHtml(word.word)}</span>
         <button class="remove-hist font-black px-2 text-xs" data-idx="${index}">✕</button>
       </div>
@@ -296,7 +301,7 @@ function displayWord() {
         <h4 class="font-black text-lg">${getFlag(word.lang)} ${escapeHtml(word.word)}</h4>
         <p class="text-sm opacity-80">${escapeHtml(word.translation)}</p>
         <div class="flex justify-between items-center mt-3">
-          <span class="px-2 py-0.5 rounded text-xs font-bold text-black" style="background:${getLevelColor(word.level)};">${word.level}</span>
+          <span class="px-2 py-0.5 rounded text-xs font-bold" style="background:${getLevelColor(word.level)}; color:var(--ink);">${word.level}</span>
           <div class="flex gap-2">
             <button class="toggle-master text-lg" data-id="${word.id}" data-status="${word.mastered}">${word.mastered ? '✔️' : '☑️'}</button>
             <button class="del-word text-lg" data-id="${word.id}">🗑️</button>
@@ -334,11 +339,60 @@ function displayWord() {
     const container = $('#auditLogList');
     if (!container) return;
     container.innerHTML = dbAuditLogs.map(log => `
-      <div class="flex justify-between items-center bg-gray-50 dark:bg-gray-800 px-4 py-2.5 brut-border rounded-lg text-sm mb-2">
-        <div><span class="font-bold">${escapeHtml(log.word)}</span> <span class="text-xs ml-2 px-2 py-0.5 rounded font-black bg-purple-200 text-purple-800">${log.type}</span></div>
+      <div class="flex justify-between items-center px-4 py-2.5 brut-border rounded-lg text-sm mb-2" style="background:var(--card-inner-bg); color:var(--ink);">
+        <div class="flex items-center gap-2">
+          <span class="font-bold">${escapeHtml(log.word)}</span>
+          <span class="text-xs px-2 py-0.5 rounded font-black" style="background:var(--lavender); color:var(--ink);">${log.type}</span>
+          <button class="save-from-log text-xs brut-border rounded px-2 py-0.5 font-black" data-word="${escapeHtml(log.word)}" style="background:var(--lime); color:#000;">❤️</button>
+        </div>
         <span class="font-mono text-xs opacity-60">${log.time}</span>
       </div>
     `).join('');
+
+    // Сохранение слова из лога в словарь
+    container.querySelectorAll('.save-from-log').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const wordText = e.target.dataset.word;
+        if (!wordText) return;
+
+        // Проверка, есть ли уже в словаре
+        if (dbVocabulary.some(w => w.word.toLowerCase() === wordText.toLowerCase())) {
+          showToast(`"${wordText}" уже в словаре`, 'info');
+          return;
+        }
+
+        const geminiKey = localStorage.getItem('wf_gemini_key');
+        const newWord = {
+          word: wordText,
+          translation: '—',
+          transcription: '',
+          lang: 'английском',
+          level: 'B1',
+          category: 'Из лога',
+          id: 'log_' + Date.now(),
+          mastered: false,
+          examples: []
+        };
+
+        // AI-улучшение
+        if (geminiKey && typeof enhanceWordWithAI === 'function') {
+          const enhanced = await enhanceWordWithAI(wordText, 'английском', '', '', geminiKey);
+          if (enhanced.translation) newWord.translation = enhanced.translation;
+          if (enhanced.level) newWord.level = enhanced.level;
+          if (enhanced.examples.length > 0) newWord.examples = enhanced.examples;
+        }
+
+        if (currentUser) {
+          cloudSaveWord(newWord);
+          cloudLogAction(newWord.word, 'Из лога');
+        } else {
+          dbVocabulary.unshift(newWord);
+          renderVocab();
+        }
+        showToast(`❤️ "${wordText}" сохранено в словарь`, 'success');
+      });
+    });
   }
 
   function updateDashboard() {
@@ -511,24 +565,73 @@ const speakBtn = $('#speakBtn');
       });
     }
 
+    // Улучшение слова через AI: перевод, уровень, примеры
+    async function enhanceWordWithAI(wordVal, lang, existingTranslation, existingLevel, geminiKey) {
+      const result = { translation: existingTranslation, level: existingLevel, examples: [] };
+
+      try {
+        const needTranslation = !existingTranslation;
+        const needLevel = !existingLevel || existingLevel === 'B1'; // B1 — заглушка по умолчанию, значит не указан
+        const prompt = `Проанализируй слово "${wordVal}" на ${lang} языке.${needTranslation ? ` Дай перевод на русский.` : ''}${needLevel ? ` Определи уровень языка (A1, A2, B1, B2, C1, C2).` : ''} Сгенерируй 3 примера предложений с переводом на русский. Верни ТОЛЬКО валидный JSON без markdown: {"translation":"${needTranslation ? 'перевод' : existingTranslation}","level":"${needLevel ? 'B1' : existingLevel}","examples":[{"en":"sentence1","ru":"перевод1"},{"en":"sentence2","ru":"перевод2"},{"en":"sentence3","ru":"перевод3"}]}`;
+
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${encodeURIComponent(geminiKey)}`;
+        const resp = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+        });
+        const data = await resp.json();
+        if (data.error) throw new Error(data.error.message);
+
+        let rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
+        const enhanced = JSON.parse(rawText.replace(/```json|```/gi, '').trim());
+
+        if (enhanced.translation) result.translation = enhanced.translation;
+        if (enhanced.level) result.level = enhanced.level;
+        if (enhanced.examples && enhanced.examples.length > 0) result.examples = enhanced.examples;
+      } catch (e) {
+        console.error('AI Enhancement Error:', e);
+      }
+
+      return result;
+    }
+
     // Добавление кастомного слова
     if ($('#addCustomWordBtn')) {
-      $('#addCustomWordBtn').addEventListener('click', () => {
+      $('#addCustomWordBtn').addEventListener('click', async () => {
         const wordVal = $('#customWord') ? $('#customWord').value.trim() : '';
+        if (!wordVal) { showToast('Введите слово!', 'error'); return; }
+
         const transVal = $('#customTranslation') ? $('#customTranslation').value.trim() : '';
-        if (!wordVal || !transVal) { showToast('Заполните слово и перевод!', 'error'); return; }
+        const selectedLang = $('#customLang') ? $('#customLang').value : 'английском';
+        const selectedLevel = $('#customLevel') ? $('#customLevel').value : 'B1';
+        const geminiKey = localStorage.getItem('wf_gemini_key');
+
+        // Показываем загрузку
+        const addBtn = $('#addCustomWordBtn');
+        const originalText = addBtn.textContent;
+        addBtn.textContent = '⏳ Генерация...';
+        addBtn.disabled = true;
 
         const newWord = {
           word: wordVal,
-          translation: transVal,
-          transcription: $('#customTranscription') ? $('#customTranscription').value.trim() : '',
-          lang: $('#customLang') ? $('#customLang').value : 'английском',
-          level: $('#customLevel') ? $('#customLevel').value : 'B1',
+          translation: transVal || '—',
+          transcription: '',
+          lang: selectedLang,
+          level: 'B1',
           category: 'Своё слово',
           id: 'custom_' + Date.now(),
           mastered: false,
           examples: []
         };
+
+        // AI-улучшение: перевод, уровень, примеры
+        if (geminiKey) {
+          const enhanced = await enhanceWordWithAI(wordVal, selectedLang, transVal, '', geminiKey);
+          if (enhanced.translation) newWord.translation = enhanced.translation;
+          if (enhanced.level) newWord.level = enhanced.level;
+          if (enhanced.examples.length > 0) newWord.examples = enhanced.examples;
+        }
 
         if (currentUser) {
           cloudSaveWord(newWord);
@@ -540,7 +643,9 @@ const speakBtn = $('#speakBtn');
 
         if ($('#customWord')) $('#customWord').value = '';
         if ($('#customTranslation')) $('#customTranslation').value = '';
-        if ($('#customTranscription')) $('#customTranscription').value = '';
+
+        addBtn.textContent = originalText;
+        addBtn.disabled = false;
         showToast('Слово сохранено!', 'success');
       });
     }
