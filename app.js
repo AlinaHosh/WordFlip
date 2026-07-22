@@ -2,7 +2,7 @@
   "use strict";
 
   // 🔴 ВСТАВЬ СВОИ ДАННЫЕ СЮДА (ОНИ ВШИТЫ В КОД ДЛЯ УДОБСТВА ПОЛЬЗОВАТЕЛЕЙ)
-  const DEFAULT_SUPABASE_URL = "https://pdffpcfkovyfvagvobuy.supabase.co/rest/v1/"; // Твой URL проекта
+  const DEFAULT_SUPABASE_URL = "https://pdffpcfkovyfvagvobuy.supabase.co"; // Твой URL проекта
   const DEFAULT_SUPABASE_KEY = "sb_publishable_Ae6wkiEDjkirw-qTXZcCrA_2s3-PLU4";     // Твой Anon Key
 
   let supabaseClient = null;
